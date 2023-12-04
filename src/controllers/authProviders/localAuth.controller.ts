@@ -1,30 +1,45 @@
-import * as passportStrategy from "passport-local";
+import passportLocal from "passport-local";
 import passport from "passport";
-import bcrypt from "bcrypt";
-import { Express, Request, Response, NextFunction } from "express";
-import User from "../../schemats/userSchema"
+import { Express } from "express";
+import User from "../../schemats/userSchema";
+
+const LocalStrategy = passportLocal.Strategy;
 
 function initPassport(app: Express) {
-
-    const user = new User();
     app.use(passport.initialize());
-    app.use(passport.authenticate('session'));
+    app.use(passport.session());
 
-
-    passport.use(new passportStrategy.Strategy(
-        { usernameField: "email" }, async (email, password, done) => {
+    passport.use(
+        new LocalStrategy({ usernameField: "email", passwordField: "password" }, async (username, password, done) => {
             try {
-                if (!email) { done(null, false) }
-                const searchUser = user.findUser(email);
-                if (searchUser.email == email && await bcrypt.compare(password, (searchUser.password).toString())) {
-                    done(null, searchUser.users[0]);
+
+                const user = await User.authenticate()(username, password);
+
+                if (user) {
+                    return done(null, user);
                 } else {
-                    done(null, false);
+                    return done(null, false, { message: "Incorrect password." });
                 }
-            } catch (e) {
-                done(e);
+            } catch (error) {
+                return done(error);
             }
-        }));
+        })
+    );
 
+    passport.serializeUser((user, done) => {
 
+        done(null, user);
+    });
+
+    passport.deserializeUser(async (id, done) => {
+        try {
+            const user = await User.findById(id);
+            done(null, user);
+        } catch (error) {
+            done(error);
+        }
+    });
 }
+
+
+export default initPassport;
