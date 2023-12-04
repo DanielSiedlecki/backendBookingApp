@@ -1,5 +1,12 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Document, Schema } from 'mongoose';
 import passportLocalMongoose from 'passport-local-mongoose';
+
+interface UserDocument extends Document {
+    fullname: string;
+    email: string;
+    password: string;
+    role: string
+}
 
 const userSchema = new Schema(
     {
@@ -14,6 +21,6 @@ userSchema.plugin(passportLocalMongoose, {
     usernameField: 'email'
 });
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model<UserDocument>('User', userSchema);
 
 export default User;
