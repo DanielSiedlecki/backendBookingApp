@@ -16,6 +16,8 @@ async function createWeek(req: Request, res: Response, next: NextFunction) {
         const existingDays = await openingHours.find();
         if (existingDays.length < 7) {
 
+            await openingHours.deleteMany();
+
             for (const d of days) {
                 const day = new openingHours({
                     dayOfWeek: d,
@@ -23,8 +25,9 @@ async function createWeek(req: Request, res: Response, next: NextFunction) {
                     closeTime: "00:00",
                 }).save();
             }
+            return res.status(200).json({ message: "Created Days" });
         }
-        return res.status(200).json({ message: "Created Days" });
+        return res.status(404).json({ message: "Error to many days" });
     } catch (err) {
         console.log(err);
         return res.status(502).json({ message: "Error" });
