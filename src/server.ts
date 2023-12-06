@@ -1,9 +1,10 @@
 import express from "express";
 import connectDB from "./config/dbConnection";
 import { createUser, loginUser } from "./controllers/auth.controller";
-import initPassport from './controllers/authProviders/localAuth.controller'
+import routerAuth from "./routes/auth.routes"
 require("dotenv").config();
 import session from 'express-session';
+import initPassport from "./controllers/authProviders/localAuth.controller";
 
 connectDB();
 const app = express();
@@ -17,8 +18,7 @@ const port = process.env.PORT || 3030;
 app.use(express.json());
 
 initPassport(app);
-app.post("/login", loginUser);
-app.post("/register", createUser);
+app.use("/auth", routerAuth)
 
 
 app.listen(port, () => {
