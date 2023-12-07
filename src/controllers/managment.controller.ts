@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { openingHours } from "../schemats/openingHoursSchema";
 import { specialDays } from "../schemats/specialDaysSchema";
-import { getDayName } from "../services/dataService";
+import { getDayName, validDateFormat } from "../services/dataService";
 
 async function createWeek(req: Request, res: Response, next: NextFunction) {
     try {
@@ -85,8 +85,8 @@ async function getOpenHours(req: Request, res: Response) {
     try {
         const { chooseDate } = req.body;
 
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (!dateRegex.test(chooseDate)) {
+
+        if (!validDateFormat(chooseDate)) {
             return res.status(400).json({ message: 'Invalid date format. Please use "rrrr-mm-d".' });
         }
 
@@ -128,6 +128,18 @@ async function createSpecialDay(req: Request, res: Response) {
     try {
         const { datDay, opTime, cloTime } = req.body;
 
+        if (!validDateFormat(datDay)) {
+            return res.status(400).json({ message: 'Invalid date format. Please use "rrrr-mm-d".' });
+        }
+
+        let existingDay = await specialDays.findOne({
+            date: datDay
+        })
+
+        if (existingDay) {
+            return res.status(400).json({ message: 'The day already exists' });
+        }
+
         const day = await specialDays.create({
             date: datDay,
             openTime: opTime,
@@ -145,6 +157,11 @@ async function updateSpecialDay(req: Request, res: Response) {
 
     try {
         const { datDay, opTime, cloTime } = req.body;
+
+        if (!validDateFormat(datDay)) {
+            return res.status(400).json({ message: 'Invalid date format. Please use "rrrr-mm-d".' });
+        }
+
 
         let day = await specialDays.findOneAndUpdate(
             { date: datDay },
