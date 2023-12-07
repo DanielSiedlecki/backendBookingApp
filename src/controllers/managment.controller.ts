@@ -20,11 +20,11 @@ async function createWeek(req: Request, res: Response, next: NextFunction) {
             await openingHours.deleteMany();
 
             for (const d of days) {
-                const day = new openingHours({
+                const day = await openingHours.create({
                     dayOfWeek: d,
                     openTime: "00:00",
                     closeTime: "00:00",
-                }).save();
+                })
             }
             return res.status(200).json({ message: "Created Days" });
         }
@@ -105,12 +105,23 @@ async function getOpenHours(req: Request, res: Response) {
 }
 
 async function createSpecialDay(req: Request, res: Response) {
+
     try {
+        const { datDay, opTime, cloTime } = req.body;
 
+        const day = await specialDays.create({
+            date: datDay,
+            openTime: opTime,
+            closeTime: cloTime
+        });
+
+        res.status(201).json({ message: 'Special day created successfully', day });
     } catch (error) {
-
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
     }
 }
 
 
-export { createWeek, changeOpenHouer, getAllOpenHours, getOpenHours };
+
+export { createWeek, changeOpenHouer, getAllOpenHours, getOpenHours, createSpecialDay };
