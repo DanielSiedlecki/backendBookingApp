@@ -4,7 +4,6 @@ import { specialDays } from "../schemats/specialDaysSchema";
 import { getDayName, validDateFormat } from "../services/dataService";
 import { validFormatTime } from "../services/timeService";
 
-
 async function createWeek(req: Request, res: Response, next: NextFunction) {
     try {
         const days = [
@@ -41,7 +40,6 @@ async function changeOpenHouer(req: Request, res: Response) {
     try {
         const { dayName, opTime, cloTime } = req.body;
 
-
         if (!validFormatTime(opTime) || !validFormatTime(cloTime)) {
             return res.status(400).json({ message: "Wrong format" });
         }
@@ -54,9 +52,13 @@ async function changeOpenHouer(req: Request, res: Response) {
 
         if (result) {
             console.log(result);
-            return res.status(200).json({ message: "Update hours", updatedData: result });
+            return res
+                .status(200)
+                .json({ message: "Update hours", updatedData: result });
         } else {
-            return res.status(404).json({ message: "No document found for the specified dayName" });
+            return res
+                .status(404)
+                .json({ message: "No document found for the specified dayName" });
         }
     } catch (err) {
         console.log(err);
@@ -211,46 +213,38 @@ async function getAllSpecialDays(req: Request, res: Response) {
     }
 }
 async function getSpecialDay(req: Request, res: Response) {
-
     try {
         const { chooseDate } = req.body;
 
         if (validDateFormat(chooseDate)) {
             let day = await specialDays.findOne({
-                date: chooseDate
-            })
+                date: chooseDate,
+            });
             if (day) {
                 return res.status(200).json({ day });
-            }
-            else {
+            } else {
                 return res.status(404).json({ message: "Wrong date" });
             }
         }
-
-
     } catch (err) {
         console.log(err);
         return res.status(502).json({ message: "Error" });
     }
 }
 async function removeSpecialDay(req: Request, res: Response) {
-
     try {
         const { chooseDate } = req.body;
 
         if (validDateFormat(chooseDate)) {
             let day = await specialDays.findOneAndDelete({
-                date: chooseDate
-            })
+                date: chooseDate,
+            });
             if (day) {
                 return res.status(200).json({ message: "Removed day:", day });
-            }
-            else {
+            } else {
                 return res.status(404).json({ message: "Wrong date" });
             }
         }
-
-
     } catch (err) {
         console.log(err);
         return res.status(502).json({ message: "Error" });
@@ -266,5 +260,5 @@ export {
     updateSpecialDay,
     getAllSpecialDays,
     getSpecialDay,
-    removeSpecialDay
+    removeSpecialDay,
 };
