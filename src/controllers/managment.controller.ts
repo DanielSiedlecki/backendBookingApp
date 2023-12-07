@@ -141,6 +141,25 @@ async function createSpecialDay(req: Request, res: Response) {
     }
 }
 
+async function updateSpecialDay(req: Request, res: Response) {
+
+    try {
+        const { datDay, opTime, cloTime } = req.body;
+
+        let day = await specialDays.findOneAndUpdate(
+            { date: datDay },
+            { $set: { openTime: opTime, closeTime: cloTime } },
+            { new: true },
+
+        );
+
+        res.status(201).json({ message: 'Special day updated successfully', day });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
 
 
-export { createWeek, changeOpenHouer, getAllOpenHours, getOpenHours, createSpecialDay };
+
+export { createWeek, changeOpenHouer, getAllOpenHours, getOpenHours, createSpecialDay, updateSpecialDay };
