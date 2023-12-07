@@ -85,19 +85,38 @@ async function getOpenHours(req: Request, res: Response) {
     try {
         const { chooseDate } = req.body;
 
-        const dayName = getDayName(new Date(chooseDate));
-
-        const result = await openingHours.findOne({
-            dayOfWeek: dayName,
-        });
-
-        if (result) {
-            return res
-                .status(200)
-                .json({ openTime: result.openTime, closeTime: result.closeTime });
+        const dateRegex = /^\d{4}-\d{2}-\d{1,2}$/;
+        if (!dateRegex.test(chooseDate)) {
+            return res.status(400).json({ message: 'Invalid date format. Please use "rrrr-mm-d".' });
         }
 
-        return res.status(404).json({ message: "Wrong day" });
+        const specDay = await specialDays.findOne({
+            date: chooseDate
+        })
+
+        if (specDay) {
+            return res
+                .status(200)
+                .json({ openTime: specDay.openTime, closeTime: specDay.closeTime });
+        }
+
+        else if (!specDay) {
+
+            const dayName = getDayName(new Date(chooseDate));
+
+            const result = await openingHours.findOne({
+                dayOfWeek: dayName,
+            });
+            if (result) {
+                return res
+                    .status(200)
+                    .json({ openTime: result.openTime, closeTime: result.closeTime });
+            }
+        } else {
+            return res.status(404).json({ message: "Wrong day" });
+        }
+
+
     } catch (err) {
         console.log(err);
         return res.status(502).json({ message: "Error" });
