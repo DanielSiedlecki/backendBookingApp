@@ -10,5 +10,8 @@ router.get("/getOpenHours", managmentController.getOpenHours);
 router.get("/getAllOpenHours", managmentController.getAllOpenHours);
 
 router.post("/createSpecialDays", managmentController.createSpecialDay);
+router.put("/updateSpecialDays", managmentController.updateSpecialDay);
+
+
 
 export default router;
