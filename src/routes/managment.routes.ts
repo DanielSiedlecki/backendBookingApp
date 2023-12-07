@@ -9,6 +9,7 @@ router.put("/changeHouer", managmentController.changeOpenHouer);
 router.get("/getOpenHours", managmentController.getOpenHours);
 router.get("/getAllOpenHours", managmentController.getAllOpenHours);
 
+router.get("/getSpecialDay", managmentController.getSpecialDay);
 router.get("/getAllSpecialDays", managmentController.getAllSpecialDays);
 router.post("/createSpecialDays", managmentController.createSpecialDay);
 router.put("/updateSpecialDays", managmentController.updateSpecialDay);
