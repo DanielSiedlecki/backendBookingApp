@@ -85,7 +85,7 @@ async function getOpenHours(req: Request, res: Response) {
     try {
         const { chooseDate } = req.body;
 
-        const dateRegex = /^\d{4}-\d{2}-\d{1,2}$/;
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
         if (!dateRegex.test(chooseDate)) {
             return res.status(400).json({ message: 'Invalid date format. Please use "rrrr-mm-d".' });
         }
