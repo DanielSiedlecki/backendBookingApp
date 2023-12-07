@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { openingHours, specialDays } from "../schemats/openingHouersSchema";
+import { openingHours } from "../schemats/openingHoursSchema";
+import { specialDays } from "../schemats/specialDaysSchema";
 import { getDayName } from "../services/dataService";
 
 async function createWeek(req: Request, res: Response, next: NextFunction) {
@@ -102,4 +103,14 @@ async function getOpenHours(req: Request, res: Response) {
         return res.status(502).json({ message: "Error" });
     }
 }
+
+async function createSpecialDay(req: Request, res: Response) {
+    try {
+
+    } catch (error) {
+
+    }
+}
+
+
 export { createWeek, changeOpenHouer, getAllOpenHours, getOpenHours };
