@@ -1,12 +1,18 @@
 import mongoose, { Document } from "mongoose";
 
-interface openningHoursSchemaDocument extends Document {
+
+interface specialdaysSchemaDocument extends Document {
+    date: Date;
     dayOfWeek: string;
     openTime: string;
     closeTime: string;
 }
 
-const openingHoursSchema = new mongoose.Schema({
+const specialDaysSchema = new mongoose.Schema({
+    date: {
+        type: String,
+        required: true,
+    },
     dayOfWeek: {
         type: String,
         required: true,
@@ -21,10 +27,9 @@ const openingHoursSchema = new mongoose.Schema({
     },
 });
 
-
-const openingHours = mongoose.model<openningHoursSchemaDocument>(
-    "openningHours",
-    openingHoursSchema
+const specialDays = mongoose.model<specialdaysSchemaDocument>(
+    "specialDays",
+    specialDaysSchema
 );
 
-export { openingHours };
+export { specialDays }
