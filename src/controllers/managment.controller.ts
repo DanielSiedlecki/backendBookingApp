@@ -222,6 +222,29 @@ async function getSpecialDay(req: Request, res: Response) {
         return res.status(502).json({ message: "Error" });
     }
 }
+async function removeSpecialDay(req: Request, res: Response) {
+
+    try {
+        const { chooseDate } = req.body;
+
+        if (validDateFormat(chooseDate)) {
+            let day = await specialDays.findOneAndDelete({
+                date: chooseDate
+            })
+            if (day) {
+                return res.status(200).json({ message: "Removed day:", day });
+            }
+            else {
+                return res.status(404).json({ message: "Wrong date" });
+            }
+        }
+
+
+    } catch (err) {
+        console.log(err);
+        return res.status(502).json({ message: "Error" });
+    }
+}
 
 export {
     createWeek,
@@ -231,5 +254,6 @@ export {
     createSpecialDay,
     updateSpecialDay,
     getAllSpecialDays,
-    getSpecialDay
+    getSpecialDay,
+    removeSpecialDay
 };
