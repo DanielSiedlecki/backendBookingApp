@@ -2,6 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import { openingHours } from "../schemats/openingHoursSchema";
 import { specialDays } from "../schemats/specialDaysSchema";
 import { getDayName, validDateFormat } from "../services/dataService";
+import { validFormatTime } from "../services/timeService";
+
 
 async function createWeek(req: Request, res: Response, next: NextFunction) {
     try {
@@ -37,22 +39,24 @@ async function createWeek(req: Request, res: Response, next: NextFunction) {
 
 async function changeOpenHouer(req: Request, res: Response) {
     try {
-        const { dayName, opTime, clTime } = req.body;
+        const { dayName, opTime, cloTime } = req.body;
+
+
+        if (!validFormatTime(opTime) || !validFormatTime(cloTime)) {
+            return res.status(400).json({ message: "Wrong format" });
+        }
+
         const result = await openingHours.findOneAndUpdate(
             { dayOfWeek: dayName },
-            { $set: { openTime: opTime, closeTime: clTime } },
+            { $set: { openTime: opTime, closeTime: cloTime } },
             { new: true }
         );
 
         if (result) {
             console.log(result);
-            return res
-                .status(200)
-                .json({ message: "Update hours", updatedData: result });
+            return res.status(200).json({ message: "Update hours", updatedData: result });
         } else {
-            return res
-                .status(404)
-                .json({ message: "No document found for the specified dayName" });
+            return res.status(404).json({ message: "No document found for the specified dayName" });
         }
     } catch (err) {
         console.log(err);
@@ -126,6 +130,10 @@ async function createSpecialDay(req: Request, res: Response) {
     try {
         const { datDay, opTime, cloTime } = req.body;
 
+        if (!validFormatTime(opTime) || !validFormatTime(cloTime)) {
+            return res.status(400).json({ message: "Wrong format" });
+        }
+
         if (!validDateFormat(datDay)) {
             return res
                 .status(400)
@@ -156,6 +164,9 @@ async function createSpecialDay(req: Request, res: Response) {
 async function updateSpecialDay(req: Request, res: Response) {
     try {
         const { datDay, opTime, cloTime } = req.body;
+        if (!validFormatTime(opTime) || !validFormatTime(cloTime)) {
+            return res.status(400).json({ message: "Wrong format" });
+        }
 
         if (!validDateFormat(datDay)) {
             return res
