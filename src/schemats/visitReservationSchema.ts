@@ -28,3 +28,5 @@ const visitSchema = new mongoose.Schema(
 );
 
 const visit = mongoose.model<visitDocument>("Visit", visitSchema);
+
+export { visit };
