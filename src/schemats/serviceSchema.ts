@@ -3,6 +3,7 @@ import moongose, { Document } from "mongoose";
 interface serviceDocument extends Document {
     serviceName: string;
     serviceDuration: number;
+    cost: number;
 }
 
 const serviceSchema = new moongose.Schema({
@@ -14,6 +15,10 @@ const serviceSchema = new moongose.Schema({
         type: Number,
         required: true,
     },
+    cost: {
+        type: Number,
+        required: true
+    }
 });
 
 const service = moongose.model<serviceDocument>("service", serviceSchema);
