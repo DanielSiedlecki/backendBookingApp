@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from "express";
 import { openingHours } from "../schemats/openingHoursSchema";
 import { specialDays } from "../schemats/specialDaysSchema";
-import { getDayName, validDateFormat } from "../services/dataService";
+import { getDayName, isUTCDate } from "../services/dataService";
 import { validFormatTime } from "../services/timeService";
+import moment from "moment";
 
 async function createWeek(req: Request, res: Response, next: NextFunction) {
     try {
-        const days = [
+        const daysOfWeek = [
             "Monday",
             "Tuesday",
             "Wednesday",
@@ -16,23 +17,31 @@ async function createWeek(req: Request, res: Response, next: NextFunction) {
             "Sunday",
         ];
 
-        const existingDays = await openingHours.find();
-        if (existingDays.length < 7) {
+        const existingDaysCount = await openingHours.countDocuments();
+
+        if (existingDaysCount < 7) {
             await openingHours.deleteMany();
 
-            for (const d of days) {
+            const createdDays = [];
+
+            for (const dayOfWeek of daysOfWeek) {
                 const day = await openingHours.create({
-                    dayOfWeek: d,
+                    dayOfWeek,
                     openTime: "00:00",
                     closeTime: "00:00",
                 });
+                createdDays.push(day);
             }
-            return res.status(200).json({ message: "Created Days" });
+
+            return res.status(200).json({ message: "Created Days", createdDays });
         }
-        return res.status(404).json({ message: "Error to many days" });
-    } catch (err) {
-        console.log(err);
-        return res.status(502).json({ message: "Error" });
+
+        return res
+            .status(404)
+            .json({ message: "Error: Too many days already exist" });
+    } catch (error) {
+        console.error(error);
+        return res.status(502).json({ message: "Internal Server Error" });
     }
 }
 
@@ -74,7 +83,7 @@ async function getAllOpenHours(req: Request, res: Response) {
         );
 
         if (result.length > 0) {
-            let days = result.map((entry) => ({
+            let days = result.map((entry: any) => ({
                 dayName: entry.dayOfWeek,
                 openTime: entry.openTime,
                 closeTime: entry.closeTime,
@@ -94,10 +103,8 @@ async function getOpenHours(req: Request, res: Response) {
     try {
         const { chooseDate } = req.body;
 
-        if (!validDateFormat(chooseDate)) {
-            return res
-                .status(400)
-                .json({ message: 'Invalid date format. Please use "rrrr-mm-d".' });
+        if (!isUTCDate(chooseDate)) {
+            return res.status(404).json({ message: "Wrong format" });
         }
 
         const specDay = await specialDays.findOne({
@@ -109,7 +116,7 @@ async function getOpenHours(req: Request, res: Response) {
                 .status(200)
                 .json({ openTime: specDay.openTime, closeTime: specDay.closeTime });
         } else if (!specDay) {
-            const dayName = getDayName(new Date(chooseDate));
+            const dayName = getDayName(chooseDate);
 
             const result = await openingHours.findOne({
                 dayOfWeek: dayName,
@@ -132,18 +139,18 @@ async function createSpecialDay(req: Request, res: Response) {
     try {
         const { datDay, opTime, cloTime } = req.body;
 
-        if (!validFormatTime(opTime) || !validFormatTime(cloTime)) {
-            return res.status(400).json({ message: "Wrong format" });
+        if (!isUTCDate(datDay)) {
+            return res.status(404).json({ message: "Wrong format" });
         }
+        let date = moment.utc(datDay);
 
-        if (!validDateFormat(datDay)) {
-            return res
-                .status(400)
-                .json({ message: 'Invalid date format. Please use "rrrr-mm-d".' });
-        }
+        date = date.startOf("day");
 
-        let existingDay = await specialDays.findOne({
-            date: datDay,
+        const openTime = opTime;
+        const closeTime = cloTime;
+
+        const existingDay = await specialDays.findOne({
+            date: { $eq: date.toDate() },
         });
 
         if (existingDay) {
@@ -151,9 +158,9 @@ async function createSpecialDay(req: Request, res: Response) {
         }
 
         const day = await specialDays.create({
-            date: datDay,
-            openTime: opTime,
-            closeTime: cloTime,
+            date,
+            openTime,
+            closeTime,
         });
 
         res.status(201).json({ message: "Special day created successfully", day });
@@ -165,19 +172,17 @@ async function createSpecialDay(req: Request, res: Response) {
 
 async function updateSpecialDay(req: Request, res: Response) {
     try {
-        const { datDay, opTime, cloTime } = req.body;
+        const { chooseDate, opTime, cloTime } = req.body;
+        if (!isUTCDate(chooseDate)) {
+            return res.status(404).json({ message: "Wrong format" });
+        }
+
         if (!validFormatTime(opTime) || !validFormatTime(cloTime)) {
             return res.status(400).json({ message: "Wrong format" });
         }
 
-        if (!validDateFormat(datDay)) {
-            return res
-                .status(400)
-                .json({ message: 'Invalid date format. Please use "rrrr-mm-d".' });
-        }
-
-        let day = await specialDays.findOneAndUpdate(
-            { date: datDay },
+        const day = await specialDays.findOneAndUpdate(
+            { date: { $lte: new Date(chooseDate) } },
             { $set: { openTime: opTime, closeTime: cloTime } },
             { new: true }
         );
@@ -197,7 +202,7 @@ async function getAllSpecialDays(req: Request, res: Response) {
         );
 
         if (result.length > 0) {
-            let days = result.map((entry) => ({
+            let days = result.map((entry: any) => ({
                 dayName: entry.date,
                 openTime: entry.openTime,
                 closeTime: entry.closeTime,
@@ -215,35 +220,38 @@ async function getAllSpecialDays(req: Request, res: Response) {
 async function getSpecialDay(req: Request, res: Response) {
     try {
         const { chooseDate } = req.body;
+        if (!isUTCDate(chooseDate)) {
+            return res.status(404).json({ message: "Wrong format" });
+        }
 
-        if (validDateFormat(chooseDate)) {
-            let day = await specialDays.findOne({
-                date: chooseDate,
-            });
-            if (day) {
-                return res.status(200).json({ day });
-            } else {
-                return res.status(404).json({ message: "Wrong date" });
-            }
+        const dateToCheck = moment.utc(chooseDate).startOf("day").toDate();
+        const day = await specialDays.findOne({ date: { $eq: dateToCheck } });
+
+        if (day) {
+            return res.status(200).json({ day });
+        } else {
+            return res.status(404).json({ message: "Day not found" });
         }
     } catch (err) {
-        console.log(err);
-        return res.status(502).json({ message: "Error" });
+        console.error(err);
+        return res.status(500).json({ message: "Internal server error" });
     }
 }
 async function removeSpecialDay(req: Request, res: Response) {
     try {
         const { chooseDate } = req.body;
 
-        if (validDateFormat(chooseDate)) {
-            let day = await specialDays.findOneAndDelete({
-                date: chooseDate,
-            });
-            if (day) {
-                return res.status(200).json({ message: "Removed day:", day });
-            } else {
-                return res.status(404).json({ message: "Wrong date" });
-            }
+        if (!isUTCDate(chooseDate)) {
+            return res.status(404).json({ message: "Wrong format" });
+        }
+
+        let day = await specialDays.findOneAndDelete({
+            date: { $lte: new Date(chooseDate) },
+        });
+        if (day) {
+            return res.status(200).json({ message: "Removed day:", day });
+        } else {
+            return res.status(404).json({ message: "Wrong date" });
         }
     } catch (err) {
         console.log(err);
