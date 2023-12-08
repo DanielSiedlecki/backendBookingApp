@@ -1,7 +1,6 @@
 import mongoose, { Document } from "mongoose";
 
-
-interface specialdaysSchemaDocument extends Document {
+interface SpecialDaysSchemaDocument extends Document {
     date: Date;
     openTime: string;
     closeTime: string;
@@ -9,7 +8,7 @@ interface specialdaysSchemaDocument extends Document {
 
 const specialDaysSchema = new mongoose.Schema({
     date: {
-        type: String,
+        type: Date,
         required: true,
     },
     openTime: {
@@ -22,9 +21,9 @@ const specialDaysSchema = new mongoose.Schema({
     },
 });
 
-const specialDays = mongoose.model<specialdaysSchemaDocument>(
-    "specialDays",
+const specialDays = mongoose.model<SpecialDaysSchemaDocument>(
+    "SpecialDays",
     specialDaysSchema
 );
 
-export { specialDays }
+export { specialDays };
