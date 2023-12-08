@@ -1,9 +1,8 @@
 import mongoose, { Document } from "mongoose";
 
-interface visitDocument extends Document {
+interface eventDocument extends Document {
     employee_id: string;
-    dateVisit: string;
-    startVisit: string;
+    startVisit: Date;
     endVisit: string;
     serviceType: string;
     visitStatus: string;
@@ -12,14 +11,13 @@ interface visitDocument extends Document {
     cost: number;
 }
 
-const visitSchema = new mongoose.Schema(
+const eventSchema = new mongoose.Schema(
     {
         employee_id: { type: String, required: true },
-        dateVisit: { type: String, required: true },
-        startVisit: { type: String, required: true },
-        endVisit: { type: String, required: true },
+        eventVisit: { type: Date, required: true },
+        eventVisit: { type: Date, required: true },
         serviceType: { type: String, required: true },
-        visitStatus: { type: String, default: "Pending" },
+        eventStatus: { type: String, default: "Pending" },
         fullNameReserved: { type: String, required: true },
         emailReserved: { type: String, required: true },
         cost: { type: Number, required: true },
@@ -27,6 +25,6 @@ const visitSchema = new mongoose.Schema(
     { timestamps: { createdAt: true } }
 );
 
-const visit = mongoose.model<visitDocument>("Visit", visitSchema);
+const event = mongoose.model<eventDocument>("Visit", eventSchema);
 
-export { visit };
+export { event };
