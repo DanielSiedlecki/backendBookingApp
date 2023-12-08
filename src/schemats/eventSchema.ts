@@ -14,8 +14,8 @@ interface eventDocument extends Document {
 const eventSchema = new mongoose.Schema(
     {
         employee_id: { type: String, required: true },
-        eventVisit: { type: Date, required: true },
-        eventVisit: { type: Date, required: true },
+        eventStart: { type: Date, required: true },
+        eventEnd: { type: Date, required: true },
         serviceType: { type: String, required: true },
         eventStatus: { type: String, default: "Pending" },
         fullNameReserved: { type: String, required: true },
