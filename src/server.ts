@@ -3,6 +3,7 @@ import connectDB from "./config/dbConnection";
 import { createUser, loginUser } from "./controllers/auth.controller";
 import routerAuth from "./routes/auth.routes";
 import routerManagment from "./routes/managment.routes";
+import routerServices from "./routes/services.routes"
 require("dotenv").config();
 import session from "express-session";
 import initPassport from "./controllers/authProviders/localAuth.controller";
@@ -28,6 +29,7 @@ app.use(express.json());
 initPassport(app);
 app.use("/managment", routerManagment);
 app.use("/auth", routerAuth);
+app.use("/services", routerServices)
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
