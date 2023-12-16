@@ -21,4 +21,23 @@ async function getAllServices(res: Response, req: Request) {
 
 }
 
-export { getAllServices }
+async function createServices(res: Response, req: Request) {
+
+    try {
+
+        const { name, duration, cost } = req.body
+
+        const service = await Service.create({ name, duration, cost });
+
+        return res.status(201).json({ message: "Service successful created" })
+
+
+
+    } catch (err) {
+        return res.status(500).json({ message: "Error creating service" });
+    }
+
+
+}
+
+export { getAllServices, createServices }
