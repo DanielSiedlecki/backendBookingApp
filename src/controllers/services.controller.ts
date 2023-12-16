@@ -19,10 +19,11 @@ async function createServices(req: Request, res: Response) {
     try {
         const { name, duration, cost } = req.body;
 
-        const service = await Service.create({ name, duration, cost });
+        const service = await Service.create({ serviceName: name, serviceDuration: duration, cost: cost });
 
         return res.status(201).json({ message: "Service successful created" });
     } catch (err) {
+        console.log(err)
         return res.status(500).json({ message: "Error creating service" });
     }
 }
@@ -34,7 +35,7 @@ async function updateService(req: Request, res: Response) {
 
         const updatedService = await Service.findByIdAndUpdate(
             id,
-            { name, duration, cost },
+            { serviceName: name, serviceDuration: duration, cost: cost },
             { new: true }
         );
 
