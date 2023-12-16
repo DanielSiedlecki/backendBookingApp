@@ -21,6 +21,6 @@ const serviceSchema = new moongose.Schema({
     }
 });
 
-const service = moongose.model<serviceDocument>("service", serviceSchema);
+const Service = moongose.model<serviceDocument>("service", serviceSchema);
 
-export { service };
+export default Service;
