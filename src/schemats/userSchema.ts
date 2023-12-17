@@ -16,7 +16,7 @@ const userSchema = new Schema(
         email: { type: String, required: true, unique: true },
         role: { type: String, required: true, default: "User" },
         position: { type: String, required: false, default: "User" },
-        services: { type: Array<String>, required: false }
+        services: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Service' }]
     },
     { timestamps: { createdAt: true } }
 );
