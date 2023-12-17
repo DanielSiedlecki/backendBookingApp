@@ -4,6 +4,7 @@ import { createUser, loginUser } from "./controllers/auth.controller";
 import routerAuth from "./routes/auth.routes";
 import routerManagment from "./routes/managment.routes";
 import routerServices from "./routes/services.routes"
+import routerHairdressers from "./routes/hairdressers.routes"
 require("dotenv").config();
 import session from "express-session";
 import initPassport from "./controllers/authProviders/localAuth.controller";
@@ -30,7 +31,7 @@ initPassport(app);
 app.use("/managment", routerManagment);
 app.use("/auth", routerAuth);
 app.use("/services", routerServices)
-
+app.use("/hairdresser", routerHairdressers)
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
