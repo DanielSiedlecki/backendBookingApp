@@ -1,6 +1,6 @@
 import moongose, { Document } from "mongoose";
 
-interface serviceDocument extends Document {
+export interface serviceDocument extends Document {
     serviceName: string;
     serviceDuration: number;
     cost: number;
