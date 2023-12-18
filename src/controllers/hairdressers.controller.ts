@@ -1,5 +1,6 @@
 import User from "../schemats/userSchema";
 import Service from "../schemats/serviceSchema";
+import { serviceDocument } from "../schemats/serviceSchema";
 import mongoose from "mongoose";
 import { Response, Request } from "express";
 
@@ -27,8 +28,8 @@ async function setHairdresserRoleToUser(req: Request, res: Response) {
 async function setServiceToUser(req: Request, res: Response) {
     try {
         const userId = req.params.id;
-        const { serviceIds } = req.body;
-        const user = await User.findById(userId);
+        const { serviceIds } = req.body as { serviceIds: string[] };
+        const user = await User.findById(userId).populate("services");
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
@@ -38,17 +39,23 @@ async function setServiceToUser(req: Request, res: Response) {
             return res.status(403).json({ message: "User is not a Hairdresser" });
         }
 
+        const userServices = (user.services as serviceDocument[]).map(service => service._id.toString());
+
         for (const serviceId of serviceIds) {
-            const serviceExists = await Service.exists({ _id: serviceId });
+            const objectId = new mongoose.Types.ObjectId(serviceId);
+            const serviceExists = await Service.exists({ _id: objectId });
             if (!serviceExists) {
-                return res
-                    .status(404)
-                    .json({ message: `Service with ID ${serviceId} not found` });
+                return res.status(404).json({ message: `Service with ID ${serviceId} not found` });
+            }
+
+            if (userServices.includes(serviceId)) {
+                return res.status(400).json({ message: `Service with ID ${serviceId} already exists for this user` });
             }
         }
+
         const updatedUser = await User.findByIdAndUpdate(
             userId,
-            { $push: { services: { $each: serviceIds } } },
+            { $push: { services: { $each: serviceIds.map(id => new mongoose.Types.ObjectId(id)) } } },
             { new: true }
         ).populate("services");
 
@@ -56,9 +63,7 @@ async function setServiceToUser(req: Request, res: Response) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        return res
-            .status(200)
-            .json({ message: "User updated successfully", user: updatedUser });
+        return res.status(200).json({ message: "User updated successfully", user: updatedUser });
     } catch (err) {
         return res.status(500).json({ message: "Error updating user" });
     }
