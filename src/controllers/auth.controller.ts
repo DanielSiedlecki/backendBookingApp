@@ -6,14 +6,14 @@ async function createUser(req: Request, res: Response) {
   try {
     const existingUsers = await User.find();
 
-    const { fullname, email, password } = req.body;
+    const { name, surname, email, password } = req.body;
     let role: string = "User";
 
     if (existingUsers.length === 0) {
       role = "Admin";
     }
 
-    const user = new User({ fullname, email, role });
+    const user = new User({ name, surname, email, role });
     await User.register(user, password);
 
     res.status(201).json({ message: "User created succesfully" });
