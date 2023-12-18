@@ -12,7 +12,8 @@ interface UserDocument extends Document {
 
 const userSchema = new Schema(
     {
-        fullname: { type: String, required: true },
+        name: { type: String, required: true },
+        surname: { type: String, required: true },
         email: { type: String, required: true, unique: true },
         role: { type: String, required: true, default: "User" },
         position: { type: String, required: false, default: "User" },
