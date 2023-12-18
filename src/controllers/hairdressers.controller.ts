@@ -48,7 +48,7 @@ async function setServiceToUser(req: Request, res: Response) {
         }
         const updatedUser = await User.findByIdAndUpdate(
             userId,
-            { $addToSet: { services: { $each: serviceIds } } },
+            { $push: { services: { $each: serviceIds } } },
             { new: true }
         ).populate("services");
 
