@@ -1,5 +1,9 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import passportLocalMongoose from 'passport-local-mongoose';
+import { serviceDocument } from './serviceSchema';
+
+
+
 
 interface UserDocument extends Document {
     fullname: string;
@@ -7,7 +11,7 @@ interface UserDocument extends Document {
     password: string;
     role: string;
     position: string;
-    services: Array<string>
+    services: mongoose.Types.ObjectId[] | serviceDocument[];
 }
 
 const userSchema = new Schema(
