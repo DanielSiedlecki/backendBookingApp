@@ -8,13 +8,13 @@ import moment from "moment";
 async function createWeek(req: Request, res: Response, next: NextFunction) {
     try {
         const daysOfWeek = [
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-            "Sunday",
+            "Poniedziałek",
+            "Wtorek",
+            "Środa",
+            "Czwartek",
+            "Piątek",
+            "Sobota",
+            "Niedziela",
         ];
 
         const existingDaysCount = await openingHours.countDocuments();
