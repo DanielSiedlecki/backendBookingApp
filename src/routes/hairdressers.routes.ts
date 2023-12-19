@@ -8,6 +8,6 @@ router.put('/users/:id/role/hairdresser', hairdressersController.setHairdresserR
 router.put('/users/:id/services', hairdressersController.setServiceToUser);
 
 
-router.get('/hairdressers', hairdressersController.getHairdressers);
+router.get('/getHairdressers', hairdressersController.getHairdressers);
 
 export default router;
