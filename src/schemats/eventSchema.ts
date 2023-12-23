@@ -9,6 +9,7 @@ interface eventDocument extends Document {
     fullnameReserved: string;
     emailReserved: string;
     cost: number;
+    duration: number;
 }
 
 const eventSchema = new mongoose.Schema(
@@ -21,10 +22,11 @@ const eventSchema = new mongoose.Schema(
         fullNameReserved: { type: String, required: true },
         emailReserved: { type: String, required: true },
         cost: { type: Number, required: true },
+        duration: { type: Number, required: true }
     },
     { timestamps: { createdAt: true } }
 );
 
-const event = mongoose.model<eventDocument>("Visit", eventSchema);
+const event = mongoose.model<eventDocument>("Events", eventSchema);
 
-export { event };
+export { event, eventDocument };
