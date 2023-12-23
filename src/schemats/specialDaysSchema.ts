@@ -26,4 +26,4 @@ const specialDays = mongoose.model<SpecialDaysSchemaDocument>(
     specialDaysSchema
 );
 
-export { specialDays };
+export { specialDays, SpecialDaysSchemaDocument };
