@@ -138,12 +138,13 @@ async function getOpenHours(req: Request, res: Response) {
 async function createSpecialDay(req: Request, res: Response) {
     try {
         const { datDay, opTime, cloTime } = req.body;
+        const dateDay = new Date(datDay);
 
-        if (!isUTCDate(datDay)) {
-            return res.status(404).json({ message: "Wrong format" });
+        if (isUTCDate(dateDay)) {
+            return res.status(400).json({ message: "Wrong format" });
         }
-        let date = moment.utc(datDay);
 
+        let date = moment.utc(datDay);
         date = date.startOf("day");
 
         const openTime = opTime;
