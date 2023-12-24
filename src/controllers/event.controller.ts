@@ -9,6 +9,22 @@ import { getDayName } from "../services/dataService";
 import sendEmail from "../mailer/email";
 import moment from "moment";
 
+async function getEvent(req: Request, res: Response) {
+    try {
+        const eventId = req.params.id;
+
+        const findEvent = await event.findById(eventId);
+
+        if (findEvent) {
+            console.log(findEvent);
+            res.status(202).json({ findEvent });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Error from server" });
+    }
+}
+
 async function createEvent(req: Request, res: Response) {
     try {
         const {
@@ -128,4 +144,4 @@ async function getAvailableHours(req: Request, res: Response) {
     }
 }
 
-export { createEvent, getAvailableHours };
+export { createEvent, getAvailableHours, getEvent };
