@@ -58,7 +58,7 @@ async function createEvent(req: Request, res: Response) {
             emailReserved,
             "Potwierdzenie wizyty",
             "eventConfirmation",
-            { cancelLink: "www.google.com", postponeLink: "www.youtube.com" }
+            { link: `http://localhost:5173/events/cancelEvent/${newEvent.id}` }
         );
         res
             .status(201)
@@ -66,6 +66,27 @@ async function createEvent(req: Request, res: Response) {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error from server" });
+    }
+}
+
+async function cancelEvent(req: Request, res: Response) {
+    try {
+        const eventId = req.params.id;
+        const findEvent = await event.findByIdAndDelete(eventId);
+        if (findEvent) {
+            await sendEmail(
+                findEvent.emailReserved,
+                "Termin odwołany",
+                "cancelEventConfirmation",
+                {}
+            );
+            res.status(200).json({ message: "Event canceled" });
+        } else {
+            res.status(404).json({ message: "Event not found" });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
     }
 }
 
@@ -120,8 +141,8 @@ async function getAvailableHours(req: Request, res: Response) {
                 const hours = currentTime.getHours().toString().padStart(2, "0");
                 const minutes = currentTime.getMinutes().toString().padStart(2, "0");
                 const formattedTime = `${hours}:${minutes}`;
-                const eventStart = moment(currentTime).toISOString();
-                const eventEnd = moment(currentTime).add(30, "minutes").toISOString();
+                const eventStart = moment(currentTime).toDate()
+                const eventEnd = moment(currentTime).add(30, "minutes").toDate()
 
                 const eventExists = await event.findOne({
                     employee_id: employeeID,
@@ -144,4 +165,37 @@ async function getAvailableHours(req: Request, res: Response) {
     }
 }
 
-export { createEvent, getAvailableHours, getEvent };
+async function updateEventDate(req: Request, res: Response) {
+    try {
+        const eventId = req.params.id;
+        const { newEventStart } = req.body;
+        console.log(req.body)
+
+        const eventToUpdate = await event.findById(eventId);
+
+        if (!eventToUpdate) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+        const emailReserved = eventToUpdate.emailReserved;
+        const eventStartDateTime = new Date(newEventStart);
+        const eventEndDateTime = new Date(eventStartDateTime);
+        eventEndDateTime.setMinutes(eventStartDateTime.getMinutes() + eventToUpdate.duration);
+
+        eventToUpdate.eventStart = eventStartDateTime;
+        eventToUpdate.eventEnd = eventEndDateTime;
+        await eventToUpdate.save();
+        console.log("Event date updated successfully", eventToUpdate)
+        res.status(200).json({ message: "Event date updated successfully", event: eventToUpdate });
+        await sendEmail(
+            emailReserved,
+            "Zmiana terminu",
+            "changeEventConfirmation",
+            { link: `http://localhost:5173/events/cancelEvent/${eventToUpdate.id}` }
+        );
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
+    }
+}
+
+export { createEvent, getAvailableHours, getEvent, cancelEvent, updateEventDate };
