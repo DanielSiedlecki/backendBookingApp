@@ -2,8 +2,8 @@ import mongoose, { Document } from "mongoose";
 
 interface eventDocument extends Document {
     employee_id: string;
-    startVisit: Date;
-    endVisit: Date;
+    eventStart: Date;
+    eventEnd: Date;
     serviceType: string;
     visitStatus: string;
     fullnameReserved: string;
