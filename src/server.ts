@@ -7,8 +7,8 @@ import routerServices from "./routes/services.routes"
 import routerHairdressers from "./routes/hairdressers.routes"
 import routerEvents from "./routes/event.routes"
 require("dotenv").config();
-import session from "express-session";
-import initPassport from "./controllers/authProviders/localAuth.controller";
+import sessionMiddleware from "./middlewares/session.middleware";
+import initPassport from "./middlewares/passport.middleware";
 import cors from 'cors';
 
 connectDB();
@@ -18,13 +18,7 @@ const corsOptions = {
   origin: 'http://localhost:5173'
 };
 app.use(cors(corsOptions));
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || "your-secret-key",
-    resave: false,
-    saveUninitialized: false,
-  }),
-);
+app.use(sessionMiddleware);
 const port = process.env.PORT || 3030;
 app.use(express.json());
 
