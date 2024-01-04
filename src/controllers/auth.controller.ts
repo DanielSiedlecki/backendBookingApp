@@ -55,20 +55,12 @@ async function loginUser(req: Request, res: Response, next: NextFunction) {
           return next(loginErr);
         }
         if (req.isAuthenticated()) {
-          return res.json({
-            message: "Login successful",
-            user,
-            authorized: true,
-          });
+          return res.json({ message: 'Login successful', user, authorized: true });
         } else {
-          return res.status(403).json({
-            error: "Unauthorized",
-            message: "User does not have the required permissions.",
-          });
+          return res.status(403).json({ error: 'Unauthorized', message: 'User does not have the required permissions.' });
         }
       });
-    }
-  )(req, res, next);
+    })(req, res, next);
 }
 
 async function forgotPasswordRequest(req: Request, res: Response) {
@@ -95,34 +87,9 @@ async function forgotPasswordRequest(req: Request, res: Response) {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 }
-
-async function logoutSession(req: Request, res: Response) {
-  res.clearCookie("connect.sid");
-
-  try {
-    req.logout(function (err) {
-      req.session.destroy(function (err) {
-        if (err) {
-          console.error("Error logout", err);
-          return res
-            .status(500)
-            .json({
-              message: "Error logout"
-            });
-        }
-
-        res.json({ message: "Successed logout" });
-      });
-    });
-  } catch (err) {
-    console.error("Error logout", err);
-    res.status(500).json({ message: "Error logout" });
-  }
-}
-
 async function changePasswordWithToken(req: Request, res: Response) {
   const { userId, token, newPassword } = req.body;
 
