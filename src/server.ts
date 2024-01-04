@@ -1,6 +1,6 @@
 import express from "express";
 import connectDB from "./config/dbConnection";
-import { createUser, loginUser } from "./controllers/auth.controller";
+import passport from "passport";
 import routerAuth from "./routes/auth.routes";
 import routerManagment from "./routes/managment.routes";
 import routerServices from "./routes/services.routes"
@@ -23,6 +23,8 @@ const port = process.env.PORT || 3030;
 app.use(express.json());
 
 initPassport(app);
+app.use(passport.initialize());
+app.use(passport.session());
 app.use("/managment", routerManagment);
 app.use("/auth", routerAuth);
 app.use("/services", routerServices)
