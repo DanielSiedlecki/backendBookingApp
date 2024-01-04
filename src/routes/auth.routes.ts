@@ -7,5 +7,6 @@ router.post("/register", authController.createUser)
 
 router.post("/login", authController.loginUser)
 router.post("/requestPassword", authController.forgotPasswordRequest)
+router.put("/changePassword", authController.changePasswordWithToken)
 
 export default router
