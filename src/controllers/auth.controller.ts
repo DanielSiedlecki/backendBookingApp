@@ -55,12 +55,20 @@ async function loginUser(req: Request, res: Response, next: NextFunction) {
           return next(loginErr);
         }
         if (req.isAuthenticated()) {
-          return res.json({ message: 'Login successful', user, authorized: true });
+          return res.json({
+            message: "Login successful",
+            user,
+            authorized: true,
+          });
         } else {
-          return res.status(403).json({ error: 'Unauthorized', message: 'User does not have the required permissions.' });
+          return res.status(403).json({
+            error: "Unauthorized",
+            message: "User does not have the required permissions.",
+          });
         }
       });
-    })(req, res, next);
+    }
+  )(req, res, next);
 }
 
 async function forgotPasswordRequest(req: Request, res: Response) {
@@ -73,7 +81,7 @@ async function forgotPasswordRequest(req: Request, res: Response) {
         token: crypto.randomBytes(32).toString("hex"),
       });
 
-      const message = `${process.env.BASE_URL}/user/changepassword/${user.id}/${token.token}`;
+      const message = `${process.env.BASE_URL}/changepassword/${user.id}/${token.token}`;
 
       await sendEmail(user.email, "Change Password", "forgotPassword", {
         link: message,
@@ -87,16 +95,41 @@ async function forgotPasswordRequest(req: Request, res: Response) {
     }
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: 'Internal Server Error' });
+    res.status(500).json({ message: "Internal Server Error" });
   }
 }
+
+async function logoutSession(req: Request, res: Response) {
+  res.clearCookie("connect.sid");
+
+  try {
+    req.logout(function (err) {
+      req.session.destroy(function (err) {
+        if (err) {
+          console.error("Error logout", err);
+          return res
+            .status(500)
+            .json({
+              message: "Error logout"
+            });
+        }
+
+        res.json({ message: "Successed logout" });
+      });
+    });
+  } catch (err) {
+    console.error("Error logout", err);
+    res.status(500).json({ message: "Error logout" });
+  }
+}
+
 async function changePasswordWithToken(req: Request, res: Response) {
   const { userId, token, newPassword } = req.body;
-
   try {
     const resetToken = await Token.findOne({ userId, token });
 
     if (!resetToken) {
+      console.log(resetToken)
       return res.status(400).json({ error: "Invalid token" });
     }
 
@@ -118,11 +151,31 @@ async function changePasswordWithToken(req: Request, res: Response) {
     res.status(500).json({ error: "Internal Server Error" });
   }
 }
+async function requestPasswordVerify(req: Request, res: Response) {
+  const { userId, token } = req.body;
 
+  try {
+    const resetToken = await Token.findOne({ userId, token });
+    if (!resetToken) {
+      return res.status(400).json({ error: "Invalid token" });
+    }
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    return res.status(200).json({ message: "Ok" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
 export {
   createUser,
   loginUser,
   forgotPasswordRequest,
+  requestPasswordVerify,
   changePasswordWithToken,
   logoutSession,
 };
