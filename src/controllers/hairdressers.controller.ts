@@ -42,7 +42,7 @@ async function setServiceToUser(req: Request, res: Response) {
         const userServices = (user.services as serviceDocument[]).map(service => service._id.toString());
 
         for (const serviceId of serviceIds) {
-            const objectId = new mongoose.Types.ObjectId(serviceId);
+            const objectId = mongoose.Types.ObjectId(serviceId);
             const serviceExists = await Service.exists({ _id: objectId });
             if (!serviceExists) {
                 return res.status(404).json({ message: `Service with ID ${serviceId} not found` });
@@ -55,7 +55,7 @@ async function setServiceToUser(req: Request, res: Response) {
 
         const updatedUser = await User.findByIdAndUpdate(
             userId,
-            { $push: { services: { $each: serviceIds.map(id => new mongoose.Types.ObjectId(id)) } } },
+            { $push: { services: { $each: serviceIds.map(id => mongoose.Types.ObjectId(id)) } } },
             { new: true }
         ).populate("services");
 
