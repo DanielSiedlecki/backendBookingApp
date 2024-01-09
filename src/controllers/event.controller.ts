@@ -9,6 +9,7 @@ import { getDayName } from "../services/dataService";
 import sendEmail from "../mailer/email";
 import moment from "moment-timezone";
 import User from "../schemats/userSchema";
+import convertTimeStringToTimestampUTC from "../services/convertTimeToTimestampUTC";
 
 async function getAllEvents(req: Request, res: Response): Promise<void> {
     try {
@@ -61,16 +62,21 @@ async function createEvent(req: Request, res: Response) {
             return res.status(404).json({ message: "Employee not found" });
         }
 
-        const eventStartDateTime = moment.utc(eventStart).toDate();
-        const eventEndDateTime = moment
-            .utc(eventStartDateTime)
-            .add(duration, "minutes")
-            .toDate();
+        const eventStartDateTime = new Date(eventStart);
+        const eventEndDateTime = new Date(
+            eventStartDateTime.getTime() + duration * 60000
+        );
+        const eventStartUTC = eventStartDateTime.toLocaleString("en-US", {
+            timeZone: "UTC",
+        });
+        const eventEndUTC = eventEndDateTime.toLocaleString("en-US", {
+            timeZone: "UTC",
+        });
 
         const newEvent: eventDocument = new event({
             employee,
-            eventStart: eventStartDateTime,
-            eventEnd: eventEndDateTime,
+            eventStart: eventStartDateTime.toISOString(),
+            eventEnd: eventEndDateTime.toISOString(),
             serviceType,
             fullNameReserved,
             emailReserved,
@@ -127,19 +133,20 @@ async function getAvailableHours(req: Request, res: Response) {
         const employeeID = req.query.employeeID;
         const date = moment(dateParam?.toString()).toDate();
         const dayOfWeek = getDayName(date);
-        const specialDay: SpecialDaysSchemaDocument | null =
-            await specialDays.findOne({ date: date });
+        const specialDay = await specialDays.findOne({ date });
 
         let openTime: string;
         let closeTime: string;
+
         if (typeof employeeID !== "string") {
             return res.status(400).json({ message: "Invalid employee ID" });
         }
+
         if (specialDay) {
             openTime = specialDay.openTime;
             closeTime = specialDay.closeTime;
         } else {
-            const normalDay = await openingHours.findOne({ dayOfWeek: dayOfWeek });
+            const normalDay = await openingHours.findOne({ dayOfWeek });
             if (normalDay) {
                 openTime = normalDay.openTime;
                 closeTime = normalDay.closeTime;
@@ -151,29 +158,20 @@ async function getAvailableHours(req: Request, res: Response) {
         }
 
         const availableHours: string[] = [];
-        let currentTime = new Date(date);
-
-        currentTime.setHours(
-            parseInt(openTime.split(":")[0]),
-            parseInt(openTime.split(":")[1])
-        );
-
-        const closingTime = new Date(date);
-        closingTime.setHours(
-            parseInt(closeTime.split(":")[0]),
-            parseInt(closeTime.split(":")[1])
-        );
-        closingTime.setHours(closingTime.getHours() + 1);
-        currentTime.setHours(currentTime.getHours() + 1);
+        let currentTime = new Date(convertTimeStringToTimestampUTC(openTime));
+        const closingTime = new Date(convertTimeStringToTimestampUTC(closeTime));
 
         while (currentTime < closingTime) {
-            const hours = currentTime.getHours().toString().padStart(2, "0");
-            const minutes = currentTime.getMinutes().toString().padStart(2, "0");
-            const formattedTime = moment(currentTime)
-                .subtract(1, "hour")
-                .format("HH:mm");
-            const eventStart = moment(currentTime).toDate();
-            const eventEnd = moment(currentTime).add(30, "minutes").toDate();
+            const eventStart = currentTime;
+            const eventEnd = new Date(currentTime.getTime() + 30 * 60000);
+            const formattedTime = `${currentTime
+                .getUTCHours()
+                .toString()
+                .padStart(2, "0")}:${currentTime
+                    .getUTCMinutes()
+                    .toString()
+                    .padStart(2, "0")}`;
+
             const eventExists = await event.findOne({
                 employee: employeeID,
                 eventStart: { $lt: eventEnd },
@@ -189,7 +187,7 @@ async function getAvailableHours(req: Request, res: Response) {
                 availableHours.push(formattedTime);
             }
 
-            currentTime.setMinutes(currentTime.getMinutes() + 30);
+            currentTime.setUTCMinutes(currentTime.getUTCMinutes() + 30);
         }
 
         res.json({ availableHours });
@@ -212,24 +210,18 @@ async function updateEventDate(req: Request, res: Response) {
         }
         const emailReserved = eventToUpdate.emailReserved;
         const eventStartDateTime = new Date(newEventStart);
-        const eventEndDateTime = new Date(eventStartDateTime);
-        eventEndDateTime.setMinutes(
-            eventStartDateTime.getMinutes() + eventToUpdate.duration
+        const eventEndDateTime = new Date(
+            eventStartDateTime.getTime() + eventToUpdate.duration * 60000
         );
-
-        eventStartDateTime.setHours(eventStartDateTime.getHours() + 1);
-        eventEndDateTime.setHours(eventEndDateTime.getHours() + 1);
 
         eventToUpdate.eventStart = eventStartDateTime;
         eventToUpdate.eventEnd = eventEndDateTime;
         await eventToUpdate.save();
         console.log("Event date updated successfully", eventToUpdate);
-        res
-            .status(200)
-            .json({
-                message: "Event date updated successfully",
-                event: eventToUpdate,
-            });
+        res.status(200).json({
+            message: "Event date updated successfully",
+            event: eventToUpdate,
+        });
         await sendEmail(
             emailReserved,
             "Zmiana terminu",
