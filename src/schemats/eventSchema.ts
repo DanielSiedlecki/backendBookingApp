@@ -5,7 +5,7 @@ interface eventDocument extends Document {
     eventStart: Date;
     eventEnd: Date;
     serviceType: string;
-    visitStatus: string;
+    eventStatus: string;
     fullnameReserved: string;
     emailReserved: string;
     cost: number;
