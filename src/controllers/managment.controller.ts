@@ -3,6 +3,7 @@ import { openingHours } from "../schemats/openingHoursSchema";
 import { specialDays } from "../schemats/specialDaysSchema";
 import { getDayName, isUTCDate } from "../services/dataService";
 import { validFormatTime } from "../services/timeService";
+import parseTime from "../services/parseTimeString";
 import moment from "moment";
 
 async function createWeek(req: Request, res: Response, next: NextFunction) {
@@ -45,17 +46,27 @@ async function createWeek(req: Request, res: Response, next: NextFunction) {
     }
 }
 
-async function changeOpenHouer(req: Request, res: Response) {
+async function changeOpenHour(req: Request, res: Response) {
     try {
-        const { dayName, opTime, cloTime } = req.body;
+        const { dayName, startTime, endTime } = req.body;
+        console.log(req.body);
 
-        if (!validFormatTime(opTime) || !validFormatTime(cloTime)) {
+        if (!validFormatTime(startTime) || !validFormatTime(endTime)) {
             return res.status(400).json({ message: "Wrong format" });
+        }
+
+        const startTimeObj = parseTime(startTime);
+        const endTimeObj = parseTime(endTime);
+
+        if (startTimeObj > endTimeObj) {
+            return res
+                .status(401)
+                .json({ message: "Opening time cannot be greater than closing time" });
         }
 
         const result = await openingHours.findOneAndUpdate(
             { dayOfWeek: dayName },
-            { $set: { openTime: opTime, closeTime: cloTime } },
+            { $set: { openTime: startTime, closeTime: endTime } },
             { new: true }
         );
 
@@ -262,7 +273,7 @@ async function removeSpecialDay(req: Request, res: Response) {
 
 export {
     createWeek,
-    changeOpenHouer,
+    changeOpenHour,
     getAllOpenHours,
     getOpenHours,
     createSpecialDay,
