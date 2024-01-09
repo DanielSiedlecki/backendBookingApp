@@ -7,8 +7,25 @@ import { Request, Response } from "express";
 import { event, eventDocument } from "../schemats/eventSchema";
 import { getDayName } from "../services/dataService";
 import sendEmail from "../mailer/email";
-import moment from "moment";
+import moment from "moment-timezone";
+import User from "../schemats/userSchema";
 
+async function getAllEvents(req: Request, res: Response): Promise<void> {
+    try {
+        const userId = req.params.userid;
+
+        const findEvents = await event.find({ employee: userId });
+        console.log(findEvents)
+        if (!findEvents || findEvents.length === 0) {
+            res.status(404).json({ message: "No events found for the given user id" });
+        } else {
+            res.status(200).json({ events: findEvents });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+}
 async function getEvent(req: Request, res: Response) {
     try {
         const eventId = req.params.id;
@@ -25,6 +42,7 @@ async function getEvent(req: Request, res: Response) {
     }
 }
 
+
 async function createEvent(req: Request, res: Response) {
     try {
         const {
@@ -36,14 +54,18 @@ async function createEvent(req: Request, res: Response) {
             cost,
             duration,
         } = req.body;
-        console.log(req.body);
+        console.log
+        const employee = await User.findById(employee_id);
 
-        const eventStartDateTime = new Date(eventStart);
-        const eventEndDateTime = new Date(eventStartDateTime);
-        eventEndDateTime.setMinutes(eventStartDateTime.getMinutes() + duration);
-        console.log(eventEndDateTime);
+        if (!employee) {
+            return res.status(404).json({ message: "Employee not found" });
+        }
+
+        const eventStartDateTime = moment.utc(eventStart).toDate();
+        const eventEndDateTime = moment.utc(eventStartDateTime).add(duration, 'minutes').toDate();
+
         const newEvent: eventDocument = new event({
-            employee_id,
+            employee,
             eventStart: eventStartDateTime,
             eventEnd: eventEndDateTime,
             serviceType,
@@ -60,9 +82,8 @@ async function createEvent(req: Request, res: Response) {
             "eventConfirmation",
             { link: `http://localhost:5173/events/cancelEvent/${newEvent.id}` }
         );
-        res
-            .status(201)
-            .json({ message: "Evente succesfull created", event: newEvent });
+
+        res.status(201).json({ message: "Event successfully created", event: newEvent });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Error from server" });
@@ -94,7 +115,7 @@ async function getAvailableHours(req: Request, res: Response) {
     try {
         const dateParam = req.query.date;
         const employeeID = req.query.employeeID;
-        const date = moment.utc(dateParam?.toString()).toDate();
+        const date = moment(dateParam?.toString()).toDate();
         const dayOfWeek = getDayName(date);
         const specialDay: SpecialDaysSchemaDocument | null =
             await specialDays.findOne({ date: date });
@@ -109,7 +130,6 @@ async function getAvailableHours(req: Request, res: Response) {
             closeTime = specialDay.closeTime;
         } else {
             const normalDay = await openingHours.findOne({ dayOfWeek: dayOfWeek });
-            console.log(normalDay);
             if (normalDay) {
                 openTime = normalDay.openTime;
                 closeTime = normalDay.closeTime;
@@ -121,7 +141,9 @@ async function getAvailableHours(req: Request, res: Response) {
         }
 
         const availableHours: string[] = [];
+        console.log(openTime)
         let currentTime = new Date(date);
+        console.log
         currentTime.setHours(
             parseInt(openTime.split(":")[0]),
             parseInt(openTime.split(":")[1])
@@ -132,27 +154,26 @@ async function getAvailableHours(req: Request, res: Response) {
             parseInt(closeTime.split(":")[0]),
             parseInt(closeTime.split(":")[1])
         );
+        closingTime.setHours(closingTime.getHours() + 1);
+        currentTime.setHours(currentTime.getHours() + 1);
 
         while (currentTime < closingTime) {
-            const appointmentEndTime = new Date(currentTime);
-            appointmentEndTime.setMinutes(appointmentEndTime.getMinutes() + 30);
 
-            if (appointmentEndTime <= closingTime) {
-                const hours = currentTime.getHours().toString().padStart(2, "0");
-                const minutes = currentTime.getMinutes().toString().padStart(2, "0");
-                const formattedTime = `${hours}:${minutes}`;
-                const eventStart = moment(currentTime).toDate()
-                const eventEnd = moment(currentTime).add(30, "minutes").toDate()
+            console.log(closingTime)
+            const hours = currentTime.getHours().toString().padStart(2, "0");
+            const minutes = currentTime.getMinutes().toString().padStart(2, "0");
+            const formattedTime = moment(currentTime).subtract(1, 'hour').format('HH:mm');
+            const eventStart = moment(currentTime).toDate()
+            const eventEnd = moment(currentTime).add(30, "minutes").toDate()
+            const eventExists = await event.findOne({
+                employee: employeeID,
+                eventStart: { $lt: eventEnd },
+                eventEnd: { $gt: eventStart },
+            });
+            console.log(eventExists)
+            if (!eventExists) {
+                availableHours.push(formattedTime);
 
-                const eventExists = await event.findOne({
-                    employee_id: employeeID,
-                    eventStart: { $lt: eventEnd },
-                    eventEnd: { $gt: eventStart },
-                });
-
-                if (!eventExists) {
-                    availableHours.push(formattedTime);
-                }
             }
 
             currentTime.setMinutes(currentTime.getMinutes() + 30);
@@ -198,4 +219,22 @@ async function updateEventDate(req: Request, res: Response) {
     }
 }
 
-export { createEvent, getAvailableHours, getEvent, cancelEvent, updateEventDate };
+
+async function endedEvent(req: Request, res: Response) {
+    try {
+        const eventId = req.params.id;
+        console.log(req.body)
+
+        const eventToUpdate = await event.findByIdAndUpdate(eventId, { eventStatus: "Ended" }, { new: true });
+
+        if (!eventToUpdate) {
+            return res.status(404).json({ message: "Event not found" });
+        }
+        res.status(200).json({ message: "Event ended" })
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server Error" });
+    }
+}
+
+export { createEvent, getAvailableHours, getEvent, cancelEvent, updateEventDate, getAllEvents, endedEvent };
