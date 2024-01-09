@@ -2,7 +2,7 @@ import express from "express";
 import connectDB from "./config/dbConnection";
 import passport from "passport";
 import routerAuth from "./routes/auth.routes";
-import routerManagment from "./routes/managment.routes";
+import routerManagment from "./routes/management.routes";
 import routerServices from "./routes/services.routes"
 import routerHairdressers from "./routes/hairdressers.routes"
 import routerEvents from "./routes/event.routes"
@@ -22,10 +22,11 @@ app.use(sessionMiddleware);
 const port = process.env.PORT || 3030;
 app.use(express.json());
 
+
 initPassport(app);
 app.use(passport.initialize());
 app.use(passport.session());
-app.use("/managment", routerManagment);
+app.use("/management", routerManagment);
 app.use("/auth", routerAuth);
 app.use("/services", routerServices)
 app.use("/hairdresser", routerHairdressers)

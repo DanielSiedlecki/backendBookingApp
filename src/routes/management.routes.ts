@@ -4,10 +4,10 @@ import * as managmentController from "../controllers/managment.controller";
 const router = express.Router();
 
 router.get("/createWeek", managmentController.createWeek);
-router.put("/changeHouer", managmentController.changeOpenHouer);
 
 router.get("/getOpenHours", managmentController.getOpenHours);
 router.get("/getAllOpenHours", managmentController.getAllOpenHours);
+router.put("/updateOpenHour", managmentController.changeOpenHour);
 
 router.get("/getSpecialDay", managmentController.getSpecialDay);
 router.get("/getAllSpecialDays", managmentController.getAllSpecialDays);
