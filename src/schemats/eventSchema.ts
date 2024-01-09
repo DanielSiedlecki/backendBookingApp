@@ -1,7 +1,7 @@
 import mongoose, { Document } from "mongoose";
-
+import { UserDocument } from "./userSchema";
 interface eventDocument extends Document {
-    employee_id: string;
+    employee: mongoose.Types.ObjectId[] | eventDocument[];
     eventStart: Date;
     eventEnd: Date;
     serviceType: string;
@@ -14,7 +14,10 @@ interface eventDocument extends Document {
 
 const eventSchema = new mongoose.Schema(
     {
-        employee_id: { type: String, required: true },
+        employee: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Event",
+        },
         eventStart: { type: Date, required: true },
         eventEnd: { type: Date, required: true },
         serviceType: { type: String, required: true },
