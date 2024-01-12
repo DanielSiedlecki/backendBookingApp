@@ -297,6 +297,22 @@ async function deleteUser(req: Request, res: Response) {
         return res.status(502).json({ message: "Error" });
     }
 }
+async function updateRoleUser(req: Request, res: Response) {
+    try {
+        const userId = req.params.id;
+
+        let user = await User.findByIdAndUpdate(userId, {
+            role: "Hairdresser",
+            position: "Hairdresser",
+        });
+        if (user) {
+            return res.status(200).json({ message: "User Updated" });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(502).json({ message: "Error" });
+    }
+}
 
 export {
     createWeek,
@@ -309,5 +325,6 @@ export {
     getSpecialDay,
     removeSpecialDay,
     getAllUsers,
-    deleteUser
+    deleteUser,
+    updateRoleUser
 };
