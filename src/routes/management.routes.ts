@@ -12,7 +12,6 @@ router.put("/updateOpenHour", managmentController.changeOpenHour);
 router.get("/getSpecialDay", managmentController.getSpecialDay);
 router.get("/getAllSpecialDays", managmentController.getAllSpecialDays);
 router.post("/createSpecialDay", managmentController.createSpecialDay);
-router.put("/updateSpecialDay", managmentController.updateSpecialDay);
 router.delete("/removeSpecialDay", managmentController.removeSpecialDay);
 
 router.get("/getAllUsers", managmentController.getAllUsers);
