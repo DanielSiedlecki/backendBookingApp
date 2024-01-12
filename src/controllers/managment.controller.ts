@@ -183,30 +183,6 @@ async function createSpecialDay(req: Request, res: Response) {
     }
 }
 
-async function updateSpecialDay(req: Request, res: Response) {
-    try {
-        const { chooseDate, opTime, cloTime } = req.body;
-        if (!isUTCDate(chooseDate)) {
-            return res.status(404).json({ message: "Wrong format" });
-        }
-
-        if (!validFormatTime(opTime) || !validFormatTime(cloTime)) {
-            return res.status(400).json({ message: "Wrong format" });
-        }
-
-        const day = await specialDays.findOneAndUpdate(
-            { date: { $lte: new Date(chooseDate) } },
-            { $set: { openTime: opTime, closeTime: cloTime } },
-            { new: true }
-        );
-
-        res.status(201).json({ message: "Special day updated successfully", day });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Internal server error" });
-    }
-}
-
 async function getAllSpecialDays(req: Request, res: Response) {
     try {
         let result = await specialDays.find(
@@ -320,7 +296,6 @@ export {
     getAllOpenHours,
     getOpenHours,
     createSpecialDay,
-    updateSpecialDay,
     getAllSpecialDays,
     getSpecialDay,
     removeSpecialDay,
