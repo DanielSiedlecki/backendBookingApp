@@ -5,6 +5,7 @@ import { getDayName, isUTCDate } from "../services/dataService";
 import { validFormatTime } from "../services/timeService";
 import parseTime from "../services/parseTimeString";
 import moment from "moment";
+import User from "../schemats/userSchema";
 
 async function createWeek(req: Request, res: Response, next: NextFunction) {
     try {
@@ -270,6 +271,32 @@ async function removeSpecialDay(req: Request, res: Response) {
         return res.status(502).json({ message: "Error" });
     }
 }
+async function getAllUsers(req: Request, res: Response) {
+    try {
+        let users = await User.find({ role: { $in: ["Hairdresser", "User"] } });
+
+        if (users) {
+            return res.status(200).json({ message: "Users:", users });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(502).json({ message: "Error" });
+    }
+}
+
+async function deleteUser(req: Request, res: Response) {
+    try {
+        const userId = req.params.id;
+
+        let user = await User.findByIdAndRemove(userId);
+        if (user) {
+            return res.status(200).json({ message: "Deleted user" });
+        }
+    } catch (err) {
+        console.log(err);
+        return res.status(502).json({ message: "Error" });
+    }
+}
 
 export {
     createWeek,
@@ -281,4 +308,6 @@ export {
     getAllSpecialDays,
     getSpecialDay,
     removeSpecialDay,
+    getAllUsers,
+    deleteUser
 };
