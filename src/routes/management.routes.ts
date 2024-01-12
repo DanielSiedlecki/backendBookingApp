@@ -16,5 +16,6 @@ router.put("/updateSpecialDay", managmentController.updateSpecialDay);
 router.delete("/removeSpecialDay", managmentController.removeSpecialDay);
 
 router.get("/getAllUsers", managmentController.getAllUsers);
+router.delete("/deleteUser/:id", managmentController.deleteUser);
 
 export default router;
