@@ -15,4 +15,6 @@ router.post("/createSpecialDay", managmentController.createSpecialDay);
 router.put("/updateSpecialDay", managmentController.updateSpecialDay);
 router.delete("/removeSpecialDay", managmentController.removeSpecialDay);
 
+router.get("/getAllUsers", managmentController.getAllUsers);
+
 export default router;
